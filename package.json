@@ -1,0 +1,21 @@
+{
+  "name": "module_12_challenge",
+  "version": "1.0.0",
+  "description": "",
+  "main": "server.js",
+  "scripts": {
+    "watch": "nodemon server.js",
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "start": "node server.js"
+  },
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "console.table": "^0.10.0",
+    "dotenv": "^16.1.4",
+    "express": "^4.18.2",
+    "inquirer": "^9.2.7",
+    "mysql2": "^3.3.3",
+    "nodemon": "^2.0.22"
+  }
+}
