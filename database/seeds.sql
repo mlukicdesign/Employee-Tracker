@@ -1,4 +1,6 @@
 -- Insert data into department table
+-- Reminder to run with "./database/seeds.sql;"
+
 INSERT INTO department (id, name)
 VALUES
 (1, "Marketing"),
