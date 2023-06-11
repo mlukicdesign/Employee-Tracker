@@ -2,7 +2,7 @@ require('dotenv').config();
 const express = require('express');
 const { connect } = require('http2');
 const cTable = require('console.table');
-const mysql = require('mysql2');
+const mysql = require('mysql2/promise');
 const inquirer = require("inquirer");
 
 
@@ -58,40 +58,67 @@ function viewAllRoles() {
     });
   }
 
-  // Close connection?
 
-  function quit() {
-    connection.end();
+// Add new employee
+
+async function addEmployeeToDatabase() {
+    try {
+      const connection = await mysql.createConnection({
+        host: process.env.DB_HOST,
+        user: process.env.DB_USERNAME,
+        password: process.env.DB_PASSWORD,
+        database: 'employee_tracker',
+        namedPlaceholders: true,
+      });
+  
+      const prompts = [
+        {
+          type: 'input',
+          name: 'firstName',
+          message: 'Enter the first name of the employee:',
+        },
+        {
+          type: 'input',
+          name: 'lastName',
+          message: 'Enter the last name of the employee:',
+        },
+        {
+          type: 'input',
+          name: 'roleId',
+          message: 'Enter the role ID of the employee:',
+        },
+        {
+          type: 'input',
+          name: 'managerId',
+          message: 'Enter the manager ID of the employee (leave empty if none):',
+        },
+      ];
+  
+      const answers = await inquirer.prompt(prompts);
+  
+      const insertQuery =
+        'INSERT INTO employee (first_name, last_name, role_id, manager_id) VALUES (?, ?, ?, ?)';
+  
+      await connection.execute(insertQuery, [
+        answers.firstName,
+        answers.lastName,
+        answers.roleId,
+        answers.managerId || null,
+      ]);
+  
+      console.log('New employee added successfully');
+      connection.end();
+    } catch (error) {
+      console.error('Error adding new employee:', error);
+    }
+    start();
   }
 
-
-// Prompt user for new employee details
-function promptNewEmployee() {
-    return inquirer.prompt([
-      {
-        type: 'input',
-        name: 'first_name',
-        message: "Enter the employee's first name:",
-      },
-      {
-        type: 'input',
-        name: 'last_name',
-        message: "Enter the employee's last name:",
-      },
-      {
-        type: 'input',
-        name: 'role_id',
-        message: "Enter the employee's role ID:",
-      },
-      {
-        type: 'input',
-        name: 'manager_id',
-        message: "Enter the employee's manager ID (if any):",
-      },
-    ])
-}
-
-
+  
+  
+  
+  
+ 
 
 // Create a list of options
 const options = [
@@ -119,7 +146,7 @@ const options = [
       // Handle the selected option
       switch (answers.action) {
         case 'Add Employee':
-          promptNewEmployee();
+        addEmployeeToDatabase();
           console.log('Adding Employee...');
           break;
         case 'Update Employee Role':

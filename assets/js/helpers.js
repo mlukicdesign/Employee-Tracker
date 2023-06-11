@@ -1,20 +1,43 @@
-// const mysql = require('mysql2/promise');
+const mysql = require('mysql2');
 
-// // View All Roles
 
-async function viewRoles() {
-    try {
-      const query = "SELECT roles.title, roles.id, departments.department_name, roles.salary FROM roles JOIN departments ON roles.department_id = departments.id";
-      const res = await new Promise((resolve, reject) => {
-        connection.query(query, (err, res) => {
-          if (err) reject(err);
-          resolve(res);
-        });
-      });
-      console.table(res);
-    } catch (error) {
-      console.error(error);
-    }
+// Connect to Database
+const db = mysql.createConnection (
+    {
+        database: 'employee_tracker',
+        host: 'localhost',
+        user: process.env.DB_USERNAME,
+        password: process.env.DB_PASSWORD,
+    },  
+    console.log(`Connected to the employee_tracker database.`)
+);
+
+
+function viewAllRoles() {
+    const sql = 'SELECT * FROM role;';
+  
+    db.query(sql, (err, result) => {
+      if (err) {
+        console.error(err);
+        return;
+      }
+      console.table(result);
+      start();
+    });
+  }
+  
+
+  function viewAllDepartments() {
+    const sql = 'SELECT * FROM department;';
+
+    db.query(sql, (err, result) => {
+        if (err) {
+            console.error(err);
+            return;
+        }
+        console.table(result);
+        start();
+    });
   }
 
 
