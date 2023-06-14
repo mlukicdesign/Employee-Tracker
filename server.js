@@ -1,8 +1,7 @@
 require('dotenv').config();
 const express = require('express');
-const { connect } = require('http2');
 const cTable = require('console.table');
-const mysql = require('mysql2/promise');
+const mysql = require('mysql2');
 const inquirer = require("inquirer");
 
 
@@ -13,7 +12,25 @@ app.use(express.json());
 app.use(express.urlencoded({extended: true}));
 
 // app.use('helpers.js')
-
+function restart() {
+inquirer
+  .prompt([
+    {
+      type: 'list',
+      name: 'action',
+      message: 'What would you like to do next?',
+      choices: ['Go Back', 'Exit']
+    }
+  ])
+  .then((answers) => {
+    if (answers.action === 'Go Back') {
+      start();
+    } else if (answers.action === 'Exit') {
+      console.log('Program Ended');
+      return;
+    }
+  });
+}
 
 
 // Connect to Database
@@ -27,34 +44,64 @@ const db = mysql.createConnection (
     console.log(`Connected to the employee_tracker database.`)
 );
 
+// Connect to the database
+db.connect((err) => {
+  if (err) {
+    console.error('Error connecting to the database:', err);
+    return;
+  }
+  console.log('Connected to the database');
+});
+
 
 // Read data functions
 // Don't forget to add Routing later
 
 function viewAllRoles() {
     const sql = 'SELECT * FROM role;';
-  
     db.query(sql, (err, result) => {
       if (err) {
         console.error(err);
         return;
       }
       console.table(result);
-      start();
+      restart();
+    });
+  }
+
+  function viewAllRolesOnly() {
+    const sql = 'SELECT * FROM role;';
+    db.query(sql, (err, result) => {
+      if (err) {
+        console.error(err);
+        return;
+      }
+      console.table(result);
+    });
+  }
+
+  function viewAllEmployees() {
+    const sql = 'SELECT * FROM employee;';
+    db.query(sql, (err, result) => {
+      if (err) {
+        console.error(err);
+        return;
+      }
+      console.table(result);
+      restart();
     });
   }
   
 
   function viewAllDepartments() {
     const sql = 'SELECT * FROM department;';
-
     db.query(sql, (err, result) => {
         if (err) {
             console.error(err);
             return;
         }
         console.table(result);
-        start();
+        restart();
     });
   }
 
@@ -111,18 +158,66 @@ async function addEmployeeToDatabase() {
     } catch (error) {
       console.error('Error adding new employee:', error);
     }
-    start();
+    restart();
   }
 
   
-  
-  
-  
+// Update Employee (this is bogos code)
+
+function updateUserRole() {
+  // Prompt the user for the employee and role details
+  viewAllEmployees();
+  inquirer
+    .prompt([
+      {
+        type: 'input',
+        name: 'employeeId',
+        message: 'Enter the ID of the employee whose role you want to update:',
+        validate: (value) => {
+          if (value && !isNaN(value)) {
+            return true;
+          }
+          return 'Please enter a valid employee ID.';
+        }
+      },
+      {
+        type: 'input',
+        name: 'roleId',
+        message: 'Enter the new role ID for the employee:',
+        validate: (value) => {
+          if (value && !isNaN(value)) {
+            return true;
+          }
+          return 'Please enter a valid role ID.';
+        }
+      }
+    ])
+    .then((answers) => {
+      // Update the employee's role in the database
+      const query = 'UPDATE employee SET role_id = ? WHERE id = ?';
+      const params = [answers.roleId, answers.employeeId];
+
+    db.query(query, params, (error, results) => {
+        if (error) {
+          console.error('Error updating the user role: ' + error.stack);
+          return;
+        }
+        console.log(`Successfully updated the role for employee with ID ${answers.employeeId}.`);
+      });
+    });
+    restart();
+}
+
+
+
+
+
  
 
 // Create a list of options
 const options = [
-    'Add Employee',
+    'View All Employees',
+    'Add an Employee',
     'Update Employee Role',
     'View All Roles',
     'Add Roles',
@@ -145,12 +240,16 @@ const options = [
     .then((answers) => {
       // Handle the selected option
       switch (answers.action) {
-        case 'Add Employee':
+        case 'View All Employees':
+        viewAllEmployees();
+          console.log('Display All Employees...');
+          break;
+        case 'Add an Employee':
         addEmployeeToDatabase();
           console.log('Adding Employee...');
           break;
         case 'Update Employee Role':
-          // Update Employee Role logic
+          updateUserRole();
           console.log('Updating Employee Role...');
           break;
         case 'View All Roles':
