@@ -4,14 +4,6 @@ const cTable = require('console.table');
 const mysql = require('mysql2');
 const inquirer = require("inquirer");
 
-// Import Employee Logic
-
-const {
-  viewAllEmployees,
-  updateUserRole,
-  addEmployeeToDatabase,
-} = require("./js/employees.js");
-
 
 
 const PORT = process.env.PORT || 3001;
@@ -22,25 +14,25 @@ app.use(express.urlencoded({extended: true}));
 
 
 
-// function restart() {
-// inquirer
-//   .prompt([
-//     {
-//       type: 'list',
-//       name: 'action',
-//       message: 'What would you like to do next?',
-//       choices: ['Go Back', 'Exit']
-//     }
-//   ])
-//   .then((answers) => {
-//     if (answers.action === 'Go Back') {
-//       start();
-//     } else if (answers.action === 'Exit') {
-//       console.log('Program Ended');
-//       return;
-//     }
-//   });
-// }
+function restart() {
+inquirer
+  .prompt([
+    {
+      type: 'list',
+      name: 'action',
+      message: 'What would you like to do next?',
+      choices: ['Go Back', 'Exit']
+    }
+  ])
+  .then((answers) => {
+    if (answers.action === 'Go Back') {
+      start();
+    } else if (answers.action === 'Exit') {
+      console.log('Program Ended');
+      return;
+    }
+  });
+}
 
 
 // Connect to Database
@@ -79,28 +71,18 @@ function viewAllRoles() {
     });
   }
 
-  function viewAllRolesOnly() {
-    const sql = 'SELECT * FROM role;';
+
+  function viewAllEmployees() {
+    const sql = 'SELECT * FROM employee;';
     db.query(sql, (err, result) => {
       if (err) {
         console.error(err);
         return;
       }
       console.table(result);
+      restart();
     });
   }
-
-  // function viewAllEmployees() {
-  //   const sql = 'SELECT * FROM employee;';
-  //   db.query(sql, (err, result) => {
-  //     if (err) {
-  //       console.error(err);
-  //       return;
-  //     }
-  //     console.table(result);
-  //     restart();
-  //   });
-  // }
   
 
   function viewAllDepartments() {
@@ -118,58 +100,58 @@ function viewAllRoles() {
 
 // Add new employee
 
-// async function addEmployeeToDatabase() {
-//     try {
-//       const connection = await mysql.createConnection({
-//         host: process.env.DB_HOST,
-//         user: process.env.DB_USERNAME,
-//         password: process.env.DB_PASSWORD,
-//         database: 'employee_tracker',
-//         namedPlaceholders: true,
-//       });
+async function addEmployeeToDatabase() {
+    try {
+      const connection = await mysql.createConnection({
+        host: process.env.DB_HOST,
+        user: process.env.DB_USERNAME,
+        password: process.env.DB_PASSWORD,
+        database: 'employee_tracker',
+        namedPlaceholders: true,
+      });
   
-//       const prompts = [
-//         {
-//           type: 'input',
-//           name: 'firstName',
-//           message: 'Enter the first name of the employee:',
-//         },
-//         {
-//           type: 'input',
-//           name: 'lastName',
-//           message: 'Enter the last name of the employee:',
-//         },
-//         {
-//           type: 'input',
-//           name: 'roleId',
-//           message: 'Enter the role ID of the employee:',
-//         },
-//         {
-//           type: 'input',
-//           name: 'managerId',
-//           message: 'Enter the manager ID of the employee (leave empty if none):',
-//         },
-//       ];
+      const prompts = [
+        {
+          type: 'input',
+          name: 'firstName',
+          message: 'Enter the first name of the employee:',
+        },
+        {
+          type: 'input',
+          name: 'lastName',
+          message: 'Enter the last name of the employee:',
+        },
+        {
+          type: 'input',
+          name: 'roleId',
+          message: 'Enter the role ID of the employee:',
+        },
+        {
+          type: 'input',
+          name: 'managerId',
+          message: 'Enter the manager ID of the employee (leave empty if none):',
+        },
+      ];
   
-//       const answers = await inquirer.prompt(prompts);
+      const answers = await inquirer.prompt(prompts);
   
-//       const insertQuery =
-//         'INSERT INTO employee (first_name, last_name, role_id, manager_id) VALUES (?, ?, ?, ?)';
+      const insertQuery =
+        'INSERT INTO employee (first_name, last_name, role_id, manager_id) VALUES (?, ?, ?, ?)';
   
-//       await connection.execute(insertQuery, [
-//         answers.firstName,
-//         answers.lastName,
-//         answers.roleId,
-//         answers.managerId || null,
-//       ]);
+      await connection.execute(insertQuery, [
+        answers.firstName,
+        answers.lastName,
+        answers.roleId,
+        answers.managerId || null,
+      ]);
   
-//       console.log('New employee added successfully');
-//       connection.end();
-//     } catch (error) {
-//       console.error('Error adding new employee:', error);
-//     }
-//     restart();
-//   }
+      console.log('New employee added successfully');
+      connection.end();
+    } catch (error) {
+      console.error('Error adding new employee:', error);
+    }
+    restart();
+  }
 
   // Add new department
 
@@ -261,49 +243,49 @@ async function addNewRole() {
   
 // Update Employee (this is bogos code)
 
-// function updateUserRole() {
-//   // Prompt the user for the employee and role details
-//   viewAllEmployees();
-//   inquirer
-//     .prompt([
-//       {
-//         type: 'input',
-//         name: 'employeeId',
-//         message: 'Enter the ID of the employee whose role you want to update:',
-//         validate: (value) => {
-//           if (value && !isNaN(value)) {
-//             return true;
-//           }
-//           return 'Please enter a valid employee ID.';
-//         }
-//       },
-//       {
-//         type: 'input',
-//         name: 'roleId',
-//         message: 'Enter the new role ID for the employee:',
-//         validate: (value) => {
-//           if (value && !isNaN(value)) {
-//             return true;
-//           }
-//           return 'Please enter a valid role ID.';
-//         }
-//       }
-//     ])
-//     .then((answers) => {
-//       // Update the employee's role in the database
-//       const query = 'UPDATE employee SET role_id = ? WHERE id = ?';
-//       const params = [answers.roleId, answers.employeeId];
+function updateUserRole() {
+  // Prompt the user for the employee and role details
+  viewAllEmployees();
+  inquirer
+    .prompt([
+      {
+        type: 'input',
+        name: 'employeeId',
+        message: 'Enter the ID of the employee whose role you want to update:',
+        validate: (value) => {
+          if (value && !isNaN(value)) {
+            return true;
+          }
+          return 'Please enter a valid employee ID.';
+        }
+      },
+      {
+        type: 'input',
+        name: 'roleId',
+        message: 'Enter the new role ID for the employee:',
+        validate: (value) => {
+          if (value && !isNaN(value)) {
+            return true;
+          }
+          return 'Please enter a valid role ID.';
+        }
+      }
+    ])
+    .then((answers) => {
+      // Update the employee's role in the database
+      const query = 'UPDATE employee SET role_id = ? WHERE id = ?';
+      const params = [answers.roleId, answers.employeeId];
 
-//     db.query(query, params, (error, results) => {
-//         if (error) {
-//           console.error('Error updating the user role: ' + error.stack);
-//           return;
-//         }
-//         console.log(`Successfully updated the role for employee with ID ${answers.employeeId}.`);
-//       });
-//     });
-//     restart();
-// }
+    db.query(query, params, (error, results) => {
+        if (error) {
+          console.error('Error updating the user role: ' + error.stack);
+          return;
+        }
+        console.log(`Successfully updated the role for employee with ID ${answers.employeeId}.`);
+      });
+    });
+    restart();
+}
 
 
 
@@ -332,37 +314,37 @@ const options = [
         type: 'list',
         name: 'action',
         message: 'Welcome to your Employee Management Database, What would you like to do?',
-        choices: options
+        choices: options,
       }
     ])
     .then((answers) => {
       // Handle the selected option
       switch (answers.action) {
-        case 'View All Employees':
+        case 'View All Existing Employees':
         viewAllEmployees();
           console.log('Display All Employees...');
           break;
-        case 'Add an Employee':
+        case 'Add New Employee':
         addEmployeeToDatabase();
           console.log('Adding Employee...');
           break;
-        case 'Update Employee Role':
+        case 'Update Existing Employee Role':
           updateUserRole();
           console.log('Updating Employee Role...');
           break;
-        case 'View All Roles':
+        case 'View All Existing Roles':
         viewAllRoles();
           console.log('Viewing All Roles...');
           break;
-        case 'Add Roles':
+        case 'Add New Role':
           addNewRole();
           console.log('Adding Roles...');
           break;
-        case 'View All Departments':
+        case 'View All Existing Departments':
           viewAllDepartments();
           console.log('Viewing All Departments...');
           break;
-        case 'Add Department':
+        case 'Add New Department':
           addDepartment();
           console.log('Adding Department...');
           break;
@@ -388,3 +370,5 @@ app.listen(PORT, function() {
 });
 
 start();
+
+

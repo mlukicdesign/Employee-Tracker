@@ -3,32 +3,37 @@ const express = require("express");
 const cTable = require("console.table");
 const mysql = require("mysql2");
 const inquirer = require("inquirer");
+const { restart } = require("nodemon");
 
 const app = express();
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
 
-function restart() {
-  inquirer
-    .prompt([
-      {
-        type: 'list',
-        name: 'action',
-        message: 'What would you like to do next?',
-        choices: ['Go Back', 'Exit']
-      }
-    ])
-    .then((answers) => {
-      if (answers.action === 'Go Back') {
-        start();
-      } else if (answers.action === 'Exit') {
-        console.log('Program Ended');
-        return;
-      }
-    });
-  }
-  
+// const {
+//   start,
+// } = require("../server.js")
+
+
+// function restart() {
+//   inquirer
+//     .prompt([
+//       {
+//         type: 'list',
+//         name: 'action',
+//         message: 'What would you like to do next?',
+//         choices: ['Go Back', 'Exit']
+//       }
+//     ])
+//     .then((answers) => {
+//       if (answers.action === 'Go Back') {
+//         start();
+//       } else if (answers.action === 'Exit') {
+//         console.log('Program Ended');
+//         return;
+//       }
+//     });
+//   }
 
 
 // Connect to Database
@@ -42,9 +47,6 @@ const db = mysql.createConnection(
   console.log(`Connected to the employee_tracker database.`)
 );
 
-
-
-// Connect to the database
 db.connect((err) => {
   if (err) {
     console.error("Error connecting to the database:", err);
@@ -66,7 +68,6 @@ function viewAllEmployees() {
       return;
     }
     console.table(result);
-    restart();
   });
 }
 
