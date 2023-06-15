@@ -4,6 +4,15 @@ const cTable = require('console.table');
 const mysql = require('mysql2');
 const inquirer = require("inquirer");
 
+// Import Employee Logic
+
+const {
+  viewAllEmployees,
+  updateUserRole,
+  addEmployeeToDatabase,
+} = require("./js/employees.js");
+
+
 
 const PORT = process.env.PORT || 3001;
 
@@ -11,26 +20,27 @@ const app = express();
 app.use(express.json());
 app.use(express.urlencoded({extended: true}));
 
-// app.use('helpers.js')
-function restart() {
-inquirer
-  .prompt([
-    {
-      type: 'list',
-      name: 'action',
-      message: 'What would you like to do next?',
-      choices: ['Go Back', 'Exit']
-    }
-  ])
-  .then((answers) => {
-    if (answers.action === 'Go Back') {
-      start();
-    } else if (answers.action === 'Exit') {
-      console.log('Program Ended');
-      return;
-    }
-  });
-}
+
+
+// function restart() {
+// inquirer
+//   .prompt([
+//     {
+//       type: 'list',
+//       name: 'action',
+//       message: 'What would you like to do next?',
+//       choices: ['Go Back', 'Exit']
+//     }
+//   ])
+//   .then((answers) => {
+//     if (answers.action === 'Go Back') {
+//       start();
+//     } else if (answers.action === 'Exit') {
+//       console.log('Program Ended');
+//       return;
+//     }
+//   });
+// }
 
 
 // Connect to Database
@@ -80,17 +90,17 @@ function viewAllRoles() {
     });
   }
 
-  function viewAllEmployees() {
-    const sql = 'SELECT * FROM employee;';
-    db.query(sql, (err, result) => {
-      if (err) {
-        console.error(err);
-        return;
-      }
-      console.table(result);
-      restart();
-    });
-  }
+  // function viewAllEmployees() {
+  //   const sql = 'SELECT * FROM employee;';
+  //   db.query(sql, (err, result) => {
+  //     if (err) {
+  //       console.error(err);
+  //       return;
+  //     }
+  //     console.table(result);
+  //     restart();
+  //   });
+  // }
   
 
   function viewAllDepartments() {
@@ -108,7 +118,62 @@ function viewAllRoles() {
 
 // Add new employee
 
-async function addEmployeeToDatabase() {
+// async function addEmployeeToDatabase() {
+//     try {
+//       const connection = await mysql.createConnection({
+//         host: process.env.DB_HOST,
+//         user: process.env.DB_USERNAME,
+//         password: process.env.DB_PASSWORD,
+//         database: 'employee_tracker',
+//         namedPlaceholders: true,
+//       });
+  
+//       const prompts = [
+//         {
+//           type: 'input',
+//           name: 'firstName',
+//           message: 'Enter the first name of the employee:',
+//         },
+//         {
+//           type: 'input',
+//           name: 'lastName',
+//           message: 'Enter the last name of the employee:',
+//         },
+//         {
+//           type: 'input',
+//           name: 'roleId',
+//           message: 'Enter the role ID of the employee:',
+//         },
+//         {
+//           type: 'input',
+//           name: 'managerId',
+//           message: 'Enter the manager ID of the employee (leave empty if none):',
+//         },
+//       ];
+  
+//       const answers = await inquirer.prompt(prompts);
+  
+//       const insertQuery =
+//         'INSERT INTO employee (first_name, last_name, role_id, manager_id) VALUES (?, ?, ?, ?)';
+  
+//       await connection.execute(insertQuery, [
+//         answers.firstName,
+//         answers.lastName,
+//         answers.roleId,
+//         answers.managerId || null,
+//       ]);
+  
+//       console.log('New employee added successfully');
+//       connection.end();
+//     } catch (error) {
+//       console.error('Error adding new employee:', error);
+//     }
+//     restart();
+//   }
+
+  // Add new department
+
+  async function addDepartment() {
     try {
       const connection = await mysql.createConnection({
         host: process.env.DB_HOST,
@@ -121,92 +186,124 @@ async function addEmployeeToDatabase() {
       const prompts = [
         {
           type: 'input',
-          name: 'firstName',
-          message: 'Enter the first name of the employee:',
-        },
-        {
-          type: 'input',
-          name: 'lastName',
-          message: 'Enter the last name of the employee:',
-        },
-        {
-          type: 'input',
-          name: 'roleId',
-          message: 'Enter the role ID of the employee:',
-        },
-        {
-          type: 'input',
-          name: 'managerId',
-          message: 'Enter the manager ID of the employee (leave empty if none):',
+          name: 'departmentName',
+          message: 'What is the name of the new department?',
         },
       ];
   
       const answers = await inquirer.prompt(prompts);
   
       const insertQuery =
-        'INSERT INTO employee (first_name, last_name, role_id, manager_id) VALUES (?, ?, ?, ?)';
+        'INSERT INTO department (name) VALUES (?)';
   
       await connection.execute(insertQuery, [
-        answers.firstName,
-        answers.lastName,
-        answers.roleId,
-        answers.managerId || null,
+        answers.departmentName
       ]);
   
-      console.log('New employee added successfully');
+      console.log('Department added successfully');
       connection.end();
     } catch (error) {
-      console.error('Error adding new employee:', error);
+      console.error('Error adding new department', error);
     }
     restart();
   }
 
-  
-// Update Employee (this is bogos code)
+// Add New Role
 
-function updateUserRole() {
-  // Prompt the user for the employee and role details
-  viewAllEmployees();
-  inquirer
-    .prompt([
+async function addNewRole() {
+  try {
+    const connection = await mysql.createConnection({
+      host: process.env.DB_HOST,
+      user: process.env.DB_USERNAME,
+      password: process.env.DB_PASSWORD,
+      database: 'employee_tracker',
+      namedPlaceholders: true,
+    });
+
+    const prompts = [
       {
         type: 'input',
-        name: 'employeeId',
-        message: 'Enter the ID of the employee whose role you want to update:',
-        validate: (value) => {
-          if (value && !isNaN(value)) {
-            return true;
-          }
-          return 'Please enter a valid employee ID.';
-        }
+        name: 'roleTitle',
+        message: 'What is the new role title?',
       },
       {
         type: 'input',
-        name: 'roleId',
-        message: 'Enter the new role ID for the employee:',
-        validate: (value) => {
-          if (value && !isNaN(value)) {
-            return true;
-          }
-          return 'Please enter a valid role ID.';
-        }
-      }
-    ])
-    .then((answers) => {
-      // Update the employee's role in the database
-      const query = 'UPDATE employee SET role_id = ? WHERE id = ?';
-      const params = [answers.roleId, answers.employeeId];
+        name: 'roleSalary',
+        message: 'What is the salary of the new role?',
+      },
+      {
+        type: 'input',
+        name: 'roleDepartment',
+        message: 'Which existing department does this new role belong to?',
+      },
+    ];
 
-    db.query(query, params, (error, results) => {
-        if (error) {
-          console.error('Error updating the user role: ' + error.stack);
-          return;
-        }
-        console.log(`Successfully updated the role for employee with ID ${answers.employeeId}.`);
-      });
-    });
-    restart();
+    const answers = await inquirer.prompt(prompts);
+
+    const insertQuery =
+      'INSERT INTO role (title, salary, department_id) VALUES (?, ?, ?)';
+
+    await connection.execute(insertQuery, [
+      answers.roleTitle,
+      answers.roleSalary,
+      answers.roleDepartment,
+    ]);
+
+    console.log('New role added successfully');
+    connection.end();
+  } catch (error) {
+    console.error('Error adding new role', error);
+  }
+  restart();
 }
+
+
+  
+// Update Employee (this is bogos code)
+
+// function updateUserRole() {
+//   // Prompt the user for the employee and role details
+//   viewAllEmployees();
+//   inquirer
+//     .prompt([
+//       {
+//         type: 'input',
+//         name: 'employeeId',
+//         message: 'Enter the ID of the employee whose role you want to update:',
+//         validate: (value) => {
+//           if (value && !isNaN(value)) {
+//             return true;
+//           }
+//           return 'Please enter a valid employee ID.';
+//         }
+//       },
+//       {
+//         type: 'input',
+//         name: 'roleId',
+//         message: 'Enter the new role ID for the employee:',
+//         validate: (value) => {
+//           if (value && !isNaN(value)) {
+//             return true;
+//           }
+//           return 'Please enter a valid role ID.';
+//         }
+//       }
+//     ])
+//     .then((answers) => {
+//       // Update the employee's role in the database
+//       const query = 'UPDATE employee SET role_id = ? WHERE id = ?';
+//       const params = [answers.roleId, answers.employeeId];
+
+//     db.query(query, params, (error, results) => {
+//         if (error) {
+//           console.error('Error updating the user role: ' + error.stack);
+//           return;
+//         }
+//         console.log(`Successfully updated the role for employee with ID ${answers.employeeId}.`);
+//       });
+//     });
+//     restart();
+// }
 
 
 
@@ -216,13 +313,14 @@ function updateUserRole() {
 
 // Create a list of options
 const options = [
-    'View All Employees',
-    'Add an Employee',
-    'Update Employee Role',
-    'View All Roles',
-    'Add Roles',
-    'View All Departments',
-    'Add Department',
+  
+    'View All Existing Employees',
+    'Add New Employee',
+    'Update Existing Employee Role',
+    'View All Existing Roles',
+    'Add New Role',
+    'View All Existing Departments',
+    'Add New Department',
     'Quit'
   ];
   
@@ -233,7 +331,7 @@ const options = [
       {
         type: 'list',
         name: 'action',
-        message: 'What would you like to do?',
+        message: 'Welcome to your Employee Management Database, What would you like to do?',
         choices: options
       }
     ])
@@ -257,7 +355,7 @@ const options = [
           console.log('Viewing All Roles...');
           break;
         case 'Add Roles':
-          // Add Roles logic
+          addNewRole();
           console.log('Adding Roles...');
           break;
         case 'View All Departments':
@@ -265,7 +363,7 @@ const options = [
           console.log('Viewing All Departments...');
           break;
         case 'Add Department':
-          // Add Department logic
+          addDepartment();
           console.log('Adding Department...');
           break;
         case 'Quit':
