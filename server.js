@@ -132,7 +132,10 @@ async function addEmployeeToDatabase() {
           message: 'Enter the manager ID of the employee (leave empty if none):',
         },
       ];
-  
+
+      
+
+      
       const answers = await inquirer.prompt(prompts);
   
       const insertQuery =
@@ -144,6 +147,7 @@ async function addEmployeeToDatabase() {
         answers.roleId,
         answers.managerId || null,
       ]);
+
   
       console.log('New employee added successfully');
       connection.end();
@@ -172,6 +176,7 @@ async function addEmployeeToDatabase() {
           message: 'What is the name of the new department?',
         },
       ];
+
   
       const answers = await inquirer.prompt(prompts);
   
@@ -220,6 +225,7 @@ async function addNewRole() {
       },
     ];
 
+
     const answers = await inquirer.prompt(prompts);
 
     const insertQuery =
@@ -243,11 +249,9 @@ async function addNewRole() {
   
 // Update Employee (this is bogos code)
 
-function updateUserRole() {
-  // Prompt the user for the employee and role details
-  viewAllEmployees();
-  inquirer
-    .prompt([
+async function updateUserRole() {
+  try {
+    const answers = await inquirer.prompt([
       {
         type: 'input',
         name: 'employeeId',
@@ -270,24 +274,28 @@ function updateUserRole() {
           return 'Please enter a valid role ID.';
         }
       }
-    ])
-    .then((answers) => {
-      // Update the employee's role in the database
-      const query = 'UPDATE employee SET role_id = ? WHERE id = ?';
-      const params = [answers.roleId, answers.employeeId];
+    ]);
 
-    db.query(query, params, (error, results) => {
+    const query = 'UPDATE employee SET role_id = ? WHERE id = ?';
+    const params = [answers.roleId, answers.employeeId];
+
+    await new Promise((resolve, reject) => {
+      db.query(query, params, (error, results) => {
         if (error) {
-          console.error('Error updating the user role: ' + error.stack);
-          return;
+          reject(error);
+        } else {
+          console.log(`Successfully updated the role for employee with ID ${answers.employeeId}.`);
+          resolve();
         }
-        console.log(`Successfully updated the role for employee with ID ${answers.employeeId}.`);
       });
     });
+    
     restart();
+  } catch (error) {
+    console.error('Error updating the user role:', error);
+    restart();
+  }
 }
-
-
 
 
 
